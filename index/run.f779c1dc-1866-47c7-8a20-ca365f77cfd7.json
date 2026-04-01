@@ -1,0 +1,86 @@
+{
+  "run_id": "f779c1dc-1866-47c7-8a20-ca365f77cfd7",
+  "session_id": null,
+  "user_query": "Analyze AI startup opportunities",
+  "plan": [
+    "Clarify the objective and constraints",
+    "Collect relevant evidence (RAG + tools)",
+    "Synthesize insights and recommendations"
+  ],
+  "research_data": [
+    {
+      "type": "tool",
+      "name": "web_search",
+      "result": {
+        "provider": "mock",
+        "query": "Analyze AI startup opportunities",
+        "results": [
+          {
+            "title": "Mock result: AI trends overview",
+            "url": "https://example.com/ai-trends",
+            "snippet": "Mock snippet for query: Analyze AI startup opportunities"
+          }
+        ]
+      }
+    }
+  ],
+  "final_output": {
+    "summary": "Analysis for: Analyze AI startup opportunities",
+    "insights": [
+      "This is a v1 runnable demo. Insights will improve as real retrieval and models are wired in."
+    ],
+    "recommendations": [
+      "Add more data into /data and run ingestion; swap mock tool for real web search."
+    ],
+    "evidence_snippets": [
+      "Mock snippet for query: Analyze AI startup opportunities"
+    ]
+  },
+  "critique": {
+    "verdict": "pass",
+    "reasons": [],
+    "should_retry": false
+  },
+  "sources": [
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: Analyze AI startup opportunities",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "web_search",
+      "query": "Analyze AI startup opportunities"
+    }
+  ],
+  "trace": [
+    {
+      "node": "planner",
+      "latency_ms": 0
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 1
+    },
+    {
+      "node": "executor",
+      "latency_ms": 0
+    },
+    {
+      "node": "critic",
+      "latency_ms": 0
+    }
+  ],
+  "retry_count": 0,
+  "max_retries": 2,
+  "latency_ms": 10,
+  "cost": {
+    "tokens": 0,
+    "estimated_usd": 0.0
+  }
+}

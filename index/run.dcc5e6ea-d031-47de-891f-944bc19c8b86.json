@@ -1,0 +1,86 @@
+{
+  "run_id": "dcc5e6ea-d031-47de-891f-944bc19c8b86",
+  "session_id": null,
+  "user_query": "Test run snapshot 3",
+  "plan": [
+    "Clarify the objective and constraints",
+    "Collect relevant evidence (RAG + tools)",
+    "Synthesize insights and recommendations"
+  ],
+  "research_data": [
+    {
+      "type": "tool",
+      "name": "web_search",
+      "result": {
+        "provider": "mock",
+        "query": "Test run snapshot 3",
+        "results": [
+          {
+            "title": "Mock result: AI trends overview",
+            "url": "https://example.com/ai-trends",
+            "snippet": "Mock snippet for query: Test run snapshot 3"
+          }
+        ]
+      }
+    }
+  ],
+  "final_output": {
+    "summary": "Analysis for: Test run snapshot 3",
+    "insights": [
+      "This is a v1 runnable demo. Insights will improve as real retrieval and models are wired in."
+    ],
+    "recommendations": [
+      "Add more data into /data and run ingestion; swap mock tool for real web search."
+    ],
+    "evidence_snippets": [
+      "Mock snippet for query: Test run snapshot 3"
+    ]
+  },
+  "critique": {
+    "verdict": "pass",
+    "reasons": [],
+    "should_retry": false
+  },
+  "sources": [
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: Test run snapshot 3",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "web_search",
+      "query": "Test run snapshot 3"
+    }
+  ],
+  "trace": [
+    {
+      "node": "planner",
+      "latency_ms": 0
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 2
+    },
+    {
+      "node": "executor",
+      "latency_ms": 0
+    },
+    {
+      "node": "critic",
+      "latency_ms": 0
+    }
+  ],
+  "retry_count": 0,
+  "max_retries": 2,
+  "latency_ms": 7,
+  "cost": {
+    "tokens": 0,
+    "estimated_usd": 0.0
+  }
+}
