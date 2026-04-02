@@ -4,9 +4,8 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 
 class Critique(TypedDict):
-    verdict: str  # "pass" | "needs_improvement"
-    reasons: List[str]
     should_retry: bool
+    feedback: str
 
 
 class Source(TypedDict, total=False):
@@ -40,7 +39,10 @@ class AgentState(TypedDict, total=False):
     plan: List[str]
     research_data: List[Dict[str, Any]]
 
-    final_output: Dict[str, Any]
+    # Public API output (simplified contract)
+    final_output: str
+    # Internal structured output (for diagram generation, debugging, future upgrades)
+    final_output_structured: Dict[str, Any]
     critique: Critique
 
     sources: List[Source]

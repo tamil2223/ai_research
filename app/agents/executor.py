@@ -44,7 +44,7 @@ async def executor_node(state: AgentState) -> AgentState:
             detail=f"snippets={len(snippets)} gemini={bool(settings.google_api_key and query)}",
         )
 
-        final_output: Dict[str, Any] = {
+        structured: Dict[str, Any] = {
             "summary": f"Analysis for: {query}",
             "insights": [
                 "This is a v1 runnable demo. Insights will improve as real retrieval and models are wired in."
@@ -77,14 +77,16 @@ async def executor_node(state: AgentState) -> AgentState:
                 parsed = parse_json_from_llm(resp.text)
                 if isinstance(parsed, dict) and "insights" in parsed:
                     parsed["evidence_snippets"] = snippets
-                    final_output = parsed
+                    structured = parsed
                 append_usage(state, resp.usage)
                 _LOG.info("executor: Gemini OK run_id=%s", state.get("run_id"))
             except Exception as e:
                 _LOG.warning("executor: Gemini/parse failed, using defaults run_id=%s err=%s", state.get("run_id"), e)
 
         trace_event: TraceEvent = {"node": "executor", "latency_ms": elapsed_ms()}
-        state["final_output"] = final_output
+        state["final_output_structured"] = structured
+        # Simplified contract: expose a single string
+        state["final_output"] = str(structured.get("summary") or "").strip() or f"Analysis for: {query}"
         state.setdefault("trace", []).append(trace_event)
         node_end("executor", state, trace_event["latency_ms"], detail="final_output ready")
         return state

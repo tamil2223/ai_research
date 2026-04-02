@@ -48,15 +48,15 @@ The system must:
 
 To avoid ambiguity, v1 uses:
 
-| Component | Default Choice |
-| --- | --- |
-| LLM | OpenAI (`gpt-4o-mini`) |
-| Embeddings | OpenAI embeddings (configurable) |
-| Vector DB | FAISS (local) |
-| Memory (short) | Redis (local via Docker) |
-| Framework | LangGraph |
-| Backend | FastAPI |
-| Tools | Mock web search (upgrade later to real provider) |
+| Component      | Default Choice                                   |
+| -------------- | ------------------------------------------------ |
+| LLM            | OpenAI (`gpt-4o-mini`)                           |
+| Embeddings     | OpenAI embeddings (configurable)                 |
+| Vector DB      | FAISS (local)                                    |
+| Memory (short) | Redis (local via Docker)                         |
+| Framework      | LangGraph                                        |
+| Backend        | FastAPI                                          |
+| Tools          | Mock web search (upgrade later to real provider) |
 
 > Everything should be configurable, but defaults should enable **zero-friction local setup**.
 
@@ -173,13 +173,13 @@ class AgentState(TypedDict, total=False):
 
 ### Node responsibilities
 
-| Node | Reads | Writes |
-| --- | --- | --- |
-| Planner | `user_query` | `plan` |
-| Researcher | `plan` (+ optional memory retrieval) | `research_data`, `sources`, `tool_calls` |
-| Executor | `research_data` | `final_output` |
-| Critic | `final_output` | `critique` |
-| Memory | `user_query`, `final_output`, `sources`, `trace` | persistence side-effects |
+| Node       | Reads                                            | Writes                                   |
+| ---------- | ------------------------------------------------ | ---------------------------------------- |
+| Planner    | `user_query`                                     | `plan`                                   |
+| Researcher | `plan` (+ optional memory retrieval)             | `research_data`, `sources`, `tool_calls` |
+| Executor   | `research_data`                                  | `final_output`                           |
+| Critic     | `final_output`                                   | `critique`                               |
+| Memory     | `user_query`, `final_output`, `sources`, `trace` | persistence side-effects                 |
 
 ### Retry logic
 
@@ -330,3 +330,8 @@ Define a consistent error response for failures (e.g., tool error, ingestion mis
 - **Schema smoke**: `POST /run` returns JSON matching required fields (`run_id`, `plan`, `final_output`, `critique`, `sources`)
 - **Persistence smoke**: after `/run`, Redis contains `run:{run_id}` and long-term memory store was written
 
+Pick the next phase target:
+
+Streaming responses (show partial output while Gemini/agents run)
+Multi-turn memory (use session_id to carry context across requests; upgrade Redis usage beyond run snapshots)
+Evaluation automation (add automated quality checks + scoring/ranking for RAG/tool results and critic decisions)

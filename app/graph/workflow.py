@@ -110,7 +110,7 @@ async def run_workflow(query: str, session_id: Optional[str], debug: bool) -> Di
             model=settings.gemini_model,
             query=str(snapshot.get("user_query", "")),
             plan=list(snapshot.get("plan") or []),
-            final_output=dict(snapshot.get("final_output") or {}),
+            final_output=dict(snapshot.get("final_output_structured") or {}),
         )
         snapshot["topic_diagram_mermaid"] = topic_mermaid
         append_usage(snapshot, topic_usage)

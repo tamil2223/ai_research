@@ -15,45 +15,44 @@ _LOG = logging.getLogger("capstone.agents")
 
 async def critic_node(state: AgentState) -> AgentState:
     with timed() as elapsed_ms:
-        final_output = state.get("final_output") or {}
+        final_output_text = str(state.get("final_output") or "")
+        structured = state.get("final_output_structured") or {}
         settings = load_settings()
-        node_begin("critic", state, detail=f"gemini={bool(settings.google_api_key and isinstance(final_output, dict))}")
+        node_begin(
+            "critic",
+            state,
+            detail=f"gemini={bool(settings.google_api_key and isinstance(structured, dict) and structured)}",
+        )
 
-        reasons = []
         should_retry = False
+        feedback = ""
 
-        # Heuristic retry guard when Gemini is disabled/unavailable:
-        # only retry if we don't have the minimal structured output that the UI expects.
-        if (
-            not isinstance(final_output, dict)
-            or not isinstance(final_output.get("insights"), list)
-            or not isinstance(final_output.get("recommendations"), list)
-            or not isinstance(final_output.get("summary"), str)
-        ):
-            reasons.append("Output missing key structured fields.")
+        # Heuristic retry guard when Gemini is disabled/unavailable.
+        if not final_output_text.strip():
             should_retry = True
+            feedback = "Output is empty; retry recommended."
 
-        if settings.google_api_key and isinstance(final_output, dict):
+        if settings.google_api_key and isinstance(structured, dict) and structured:
             try:
                 _LOG.info("critic: calling Gemini run_id=%s", state.get("run_id"))
                 prompt = (
                     "Evaluate this output for completeness and usefulness.\n"
-                    "Return JSON with keys: verdict (pass|needs_improvement), reasons (array), should_retry (bool).\n\n"
-                    f"Output JSON:\n{final_output}"
+                    "Return JSON with keys: feedback (string), should_retry (bool).\n\n"
+                    f"Output:\n{structured}"
                 )
                 resp = await generate_text(
                     api_key=settings.google_api_key,
                     model=settings.gemini_model,
                     system=(
                         "Return ONLY a single JSON object with keys: "
-                        "verdict (string: pass or needs_improvement), reasons (array of strings), "
-                        "should_retry (boolean). No markdown, no code fences, no other text."
+                        "feedback (string) and should_retry (boolean). "
+                        "No markdown, no code fences, no other text."
                     ),
                     prompt=prompt,
                 )
                 parsed = parse_json_from_llm(resp.text)
                 if isinstance(parsed, dict) and "should_retry" in parsed:
-                    reasons = list(parsed.get("reasons") or [])
+                    feedback = str(parsed.get("feedback") or "").strip()
                     should_retry = bool(parsed.get("should_retry"))
                     append_usage(state, resp.usage)
                     _LOG.info(
@@ -65,9 +64,8 @@ async def critic_node(state: AgentState) -> AgentState:
                 _LOG.warning("critic: Gemini failed, heuristic only run_id=%s err=%s", state.get("run_id"), e)
 
         critique: Critique = {
-            "verdict": "needs_improvement" if should_retry else "pass",
-            "reasons": reasons,
             "should_retry": should_retry,
+            "feedback": feedback or ("Looks good." if not should_retry else "Needs improvement."),
         }
 
         rc = int(state.get("retry_count") or 0)
@@ -89,7 +87,7 @@ async def critic_node(state: AgentState) -> AgentState:
             "critic",
             state,
             trace_event["latency_ms"],
-            detail=f"verdict={critique['verdict']} should_retry={critique['should_retry']}",
+            detail=f"should_retry={critique['should_retry']}",
         )
         return state
 

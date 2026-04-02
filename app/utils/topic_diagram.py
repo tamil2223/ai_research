@@ -67,9 +67,6 @@ async def generate_topic_diagram_mermaid(
     summary = ""
     if isinstance(final_output, dict):
         summary = str(final_output.get("summary", ""))[:600]
-    insights = final_output.get("insights") if isinstance(final_output, dict) else None
-    if isinstance(insights, list) and insights:
-        summary += "\nInsights:\n" + "\n".join(f"- {str(x)[:200]}" for x in insights[:4])
 
     if not api_key.strip():
         _LOG.info("topic_diagram: no API key, using plan fallback")

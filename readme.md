@@ -171,7 +171,22 @@ If you prefer npm, `npm install` and `npm run dev` still work; the lockfile for 
 
 ## 🧠 Architecture Deep Dive
 
+## ✅ Execution Guarantees (v1)
+
+- Deterministic agent flow: Planner → Researcher → Executor → Critic
+- Critic loop: if `critique.should_retry == true`, route back to **Researcher** (max retries = 2)
+- Tool usage via allowlist (web search + optional external APIs)
+- Structured response enforced via Pydantic schema
+- Every run has a `run_id` and per-node timings in `trace`
+
 ### 🔍 RAG + Tool Hybrid Retrieval
+
+#### Operational details (v1)
+
+- **Data source**: local docs in `capstone/data/` (`.md` / `.txt`)
+- **Index build**: `python -m app.rag.ingest` → writes `index/rag.index` and `index/rag.meta.jsonl`
+- **Chunking**: fixed-size chunks in `app/rag/ingest.py` (chars-based) with overlap
+- **Retrieval**: `top_k = 3` with hybrid re-ranking (vector + lexical overlap)
 
 ```mermaid
 flowchart TD
@@ -193,6 +208,16 @@ flowchart TD
 ---
 
 ### 🧠 Memory Architecture
+
+#### Operational details (v1)
+
+| Type | Storage | Purpose |
+| --- | --- | --- |
+| Short-term | Redis | run snapshots + session grouping (best-effort) |
+| Long-term | FAISS | semantic recall over local docs |
+
+- Store after execution (run snapshot file always; Redis best-effort)
+- Retrieve during Researcher phase (`top_k = 3`)
 
 ```mermaid
 flowchart TD
@@ -311,9 +336,61 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-graceful-sh
 
 ### POST `/run`
 
+#### Request
+
 ```json
 {
-  "query": "Analyze AI startup opportunities"
+  "query": "Analyze AI startup opportunities",
+  "session_id": "optional-session-id",
+  "debug": true
+}
+```
+
+#### Response (v1 contract)
+
+```json
+{
+  "run_id": "uuid",
+  "plan": ["step1", "step2"],
+  "final_output": "string",
+  "critique": {
+    "feedback": "string",
+    "should_retry": false
+  },
+  "sources": [
+    {
+      "type": "rag",
+      "origin": "filename.md",
+      "snippet": "...",
+      "metadata": {}
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "...",
+      "metadata": {}
+    }
+  ],
+  "trace": [
+    {
+      "node": "planner",
+      "latency_ms": 1200
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "web_search",
+      "query": "AI trends 2026"
+    }
+  ],
+  "cost": {
+    "tokens": 1200,
+    "prompt_tokens": 900,
+    "completion_tokens": 300,
+    "estimated_usd": 0.01
+  },
+  "latency_ms": 5200,
+  "topic_diagram_mermaid": "flowchart TD\\n    ..."
 }
 ```
 

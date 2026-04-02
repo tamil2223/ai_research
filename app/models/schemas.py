@@ -39,15 +39,14 @@ class CostModel(BaseModel):
 
 
 class CritiqueModel(BaseModel):
-    verdict: Literal["pass", "needs_improvement"]
-    reasons: List[str] = Field(default_factory=list)
     should_retry: bool = False
+    feedback: str = ""
 
 
 class RunResponse(BaseModel):
     run_id: str
     plan: List[str]
-    final_output: Dict[str, Any]
+    final_output: str
     critique: CritiqueModel
     sources: List[SourceModel] = Field(default_factory=list)
     trace: List[TraceEventModel] = Field(default_factory=list)

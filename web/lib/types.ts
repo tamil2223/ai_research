@@ -1,11 +1,10 @@
 export type RunResponse = {
   run_id: string;
   plan: string[];
-  final_output: Record<string, unknown>;
+  final_output: string;
   critique: {
-    verdict: "pass" | "needs_improvement";
-    reasons: string[];
     should_retry: boolean;
+    feedback: string;
   };
   sources: Array<{
     type: "rag" | "tool";

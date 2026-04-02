@@ -168,59 +168,19 @@ export default function HomePage() {
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Final output</h2>
-            <div className="mt-3 space-y-3 text-sm">
-              {typeof result.final_output.summary === "string" && (
-                <p className="leading-relaxed">{result.final_output.summary}</p>
-              )}
-              {Array.isArray(result.final_output.insights) && (
-                <div>
-                  <div className="text-xs font-medium text-[var(--muted)]">Insights</div>
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    {(result.final_output.insights as string[]).map((x, i) => (
-                      <li key={i}>{x}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {Array.isArray(result.final_output.recommendations) && (
-                <div>
-                  <div className="text-xs font-medium text-[var(--muted)]">Recommendations</div>
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    {(result.final_output.recommendations as string[]).map((x, i) => (
-                      <li key={i}>{x}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {Array.isArray(result.final_output.evidence_snippets) &&
-                (result.final_output.evidence_snippets as string[]).length > 0 && (
-                  <details className="text-xs">
-                    <summary className="cursor-pointer text-[var(--muted)]">Evidence snippets</summary>
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-[var(--muted)]">
-                      {(result.final_output.evidence_snippets as string[]).map((x, i) => (
-                        <li key={i}>{x}</li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-            </div>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-white/90">{result.final_output}</p>
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Critique</h2>
             <p className="mt-2 text-sm">
-              <span className="font-medium">{result.critique.verdict}</span>
               {result.critique.should_retry && (
                 <span className="ml-2 text-amber-300">· retry suggested</span>
               )}
             </p>
-            {result.critique.reasons.length > 0 && (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
-                {result.critique.reasons.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
-              </ul>
-            )}
+            {result.critique.feedback ? (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--muted)]">{result.critique.feedback}</p>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
