@@ -50,4 +50,6 @@ class RunResponse(BaseModel):
     tool_calls: List[ToolCallModel] = Field(default_factory=list)
     cost: CostModel = Field(default_factory=CostModel)
     latency_ms: int
+    # Mermaid source: diagram about the *user's topic* (plan, research, execution path), not the agent stack
+    topic_diagram_mermaid: str = ""
 

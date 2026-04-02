@@ -1,0 +1,142 @@
+{
+  "run_id": "d9cc8931-dfd2-4030-b315-d53ba98e196b",
+  "session_id": "57c1108d-2ba5-4c49-91f8-f3daf4c41537",
+  "user_query": "ai engineer road map ?",
+  "plan": [
+    "*   Solidify math, programming and machine learning fundamentals.",
+    "*   Gain experience with deep learning frameworks and tools.",
+    "*   Build a portfolio of AI projects.",
+    "*   Specialize in a specific AI domain."
+  ],
+  "research_data": [
+    {
+      "type": "tool",
+      "name": "web_search",
+      "result": {
+        "provider": "mock",
+        "query": "ai engineer road map ?",
+        "results": [
+          {
+            "title": "Mock result: AI trends overview",
+            "url": "https://example.com/ai-trends",
+            "snippet": "Mock snippet for query: ai engineer road map ?"
+          }
+        ]
+      }
+    }
+  ],
+  "final_output": {
+    "summary": "I am unable to provide a summary about the AI engineer roadmap based on the provided evidence snippets, as there were none.",
+    "insights": [
+      "No insights could be generated due to the lack of relevant information."
+    ],
+    "recommendations": [
+      "Provide evidence snippets related to AI engineer roadmaps to receive a relevant response."
+    ],
+    "evidence_snippets": [
+      "Mock snippet for query: ai engineer road map ?"
+    ]
+  },
+  "critique": {
+    "verdict": "needs_improvement",
+    "reasons": [
+      "The output states that it cannot provide a summary or insights due to the lack of relevant information, even though a 'Mock snippet' is present. This indicates a failure to utilize the provided (albeit mock) evidence.",
+      "The output includes 'evidence_snippets' in the generated response, which is unusual. The expected response should synthesize information *from* the snippets, not just echo them.",
+      "The 'recommendations' suggest providing evidence snippets, implying a dependency on external information when it should ideally be processing the information already available in the mock snippet.",
+      "Max retries reached; returning best effort."
+    ],
+    "should_retry": false
+  },
+  "sources": [
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: ai engineer road map ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: ai engineer road map ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: ai engineer road map ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "web_search",
+      "query": "ai engineer road map ?"
+    },
+    {
+      "tool": "web_search",
+      "query": "ai engineer road map ?"
+    },
+    {
+      "tool": "web_search",
+      "query": "ai engineer road map ?"
+    }
+  ],
+  "trace": [
+    {
+      "node": "planner",
+      "latency_ms": 1459
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 2
+    },
+    {
+      "node": "executor",
+      "latency_ms": 1863
+    },
+    {
+      "node": "critic",
+      "latency_ms": 1974
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 0
+    },
+    {
+      "node": "executor",
+      "latency_ms": 1733
+    },
+    {
+      "node": "critic",
+      "latency_ms": 1664
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 0
+    },
+    {
+      "node": "executor",
+      "latency_ms": 1414
+    },
+    {
+      "node": "critic",
+      "latency_ms": 2042
+    }
+  ],
+  "retry_count": 2,
+  "max_retries": 2,
+  "latency_ms": 12184,
+  "cost": {
+    "tokens": 0,
+    "estimated_usd": 0.0
+  }
+}

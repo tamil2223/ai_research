@@ -17,4 +17,6 @@ export type RunResponse = {
   tool_calls: Array<{ tool: string; query: string }>;
   cost: { tokens: number; estimated_usd: number };
   latency_ms: number;
+  /** Mermaid: visual path for the user's topic (goals, research, execution) */
+  topic_diagram_mermaid?: string;
 };

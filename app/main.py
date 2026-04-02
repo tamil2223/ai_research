@@ -24,6 +24,7 @@ _CAPSTONE_LOGGERS = (
     "capstone.workflow",
     "capstone.agents",
     "capstone.llm",
+    "capstone.topic_diagram",
 )
 
 

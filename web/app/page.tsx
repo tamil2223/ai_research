@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { RunResponse } from "@/lib/types";
+import { TopicDiagram } from "@/components/TopicDiagram";
 
 function apiBase(): string {
   return process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
@@ -47,7 +48,7 @@ export default function HomePage() {
   );
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto max-w-5xl px-4 py-10">
       <header className="mb-10">
         <h1 className="text-2xl font-semibold tracking-tight text-white">
           Multi-agent research
@@ -133,6 +134,21 @@ export default function HomePage() {
               </div>
             </dl>
           </section>
+
+          {result.topic_diagram_mermaid ? (
+            <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Topic diagram
+              </h2>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                A visual path for your question—how to plan, what to research, skills or milestones, and how to move
+                forward—based on the run&apos;s plan and synthesized answer (not the LangGraph agent names).
+              </p>
+              <div className="mt-4">
+                <TopicDiagram chart={result.topic_diagram_mermaid} />
+              </div>
+            </section>
+          ) : null}
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Plan</h2>
@@ -230,7 +246,16 @@ export default function HomePage() {
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">Raw JSON</h2>
             <pre className="mt-3 max-h-96 overflow-auto rounded-lg bg-[var(--bg)] p-4 text-xs leading-relaxed text-[var(--muted)]">
-              {JSON.stringify(result, null, 2)}
+              {JSON.stringify(
+                {
+                  ...result,
+                  topic_diagram_mermaid: result.topic_diagram_mermaid
+                    ? "(Mermaid omitted — see Topic diagram above)"
+                    : result.topic_diagram_mermaid,
+                },
+                null,
+                2,
+              )}
             </pre>
           </section>
         </div>
