@@ -70,7 +70,25 @@ This project implements an **autonomous multi-agent AI system** capable of:
 - Self-evaluating outputs via critic loops
 - Persisting memory for continuous improvement
 
-It is designed as a **stateful, extensible AI system**, not a simple LLM wrapper.
+Built using **LangGraph** for **stateful multi-agent orchestration** (not linear chains).
+
+It is designed as a **production-oriented AI orchestration backend**, not a demo chatbot.
+
+---
+
+## 💡 Why This Project Matters
+
+Most LLM demos stop at “prompt in → text out.” This project focuses on **LLMs as systems**:
+
+- **Autonomous decision pipelines**: decompose → retrieve → synthesize → self-critique
+- **Tool-augmented intelligence**: integrate external information sources, not just model priors
+- **Production-style outputs**: traceability (`run_id`, `trace`, `sources`, `tool_calls`) and bounded retries
+
+This maps closely to real-world architectures behind:
+
+- internal enterprise copilots
+- research / intelligence pipelines
+- agentic workflows with guardrails and observability
 
 ---
 
@@ -138,7 +156,7 @@ docker compose up -d
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 5
 ```
 
-**Ctrl+C seems stuck?** Uvicorn shuts down *gracefully*: it waits for open connections and in-flight work. While **`POST /run`** is inside Gemini (`asyncio.to_thread`), that work can block a thread until **`GEMINI_REQUEST_TIMEOUT_SEC`** (default 120s), so shutdown may not finish until the request ends unless you cap graceful shutdown with `--timeout-graceful-shutdown` (seconds above). If it still hangs, press **Ctrl+C a second time** or in another terminal: `kill -9 $(lsof -t -i:8000)` (replace port if needed).
+**Ctrl+C seems stuck?** Uvicorn shuts down _gracefully_: it waits for open connections and in-flight work. While **`POST /run`** is inside Gemini (`asyncio.to_thread`), that work can block a thread until **`GEMINI_REQUEST_TIMEOUT_SEC`** (default 120s), so shutdown may not finish until the request ends unless you cap graceful shutdown with `--timeout-graceful-shutdown` (seconds above). If it still hangs, press **Ctrl+C a second time** or in another terminal: `kill -9 $(lsof -t -i:8000)` (replace port if needed).
 
 **Request tracing:** set `LOG_LEVEL=INFO` (default) or `LOG_LEVEL=DEBUG` for more detail, then start Uvicorn (see `.env.example`). You should see `/run` request preview, each LangGraph node (planner → researcher → executor → critic), Gemini start/end, Redis/file snapshot, and critic retry decisions—all prefixed with loggers `capstone.api`, `capstone.workflow`, `capstone.agents`, `capstone.llm`.
 
@@ -170,6 +188,57 @@ If you prefer npm, `npm install` and `npm run dev` still work; the lockfile for 
 ---
 
 ## 🧠 Architecture Deep Dive
+
+## 🎥 Demo
+
+Run the system end-to-end from the UI (`web/`) or via cURL.
+
+Average latency: **~20–50 ms locally** (mock tools) | **~2–6s with live LLM calls** (varies by model + network).
+
+### Example queries
+
+- “Analyze AI startup opportunities in 2026”
+- “How can I become a software engineer?”
+
+### Example response (real output)
+
+Below is an **actual** `POST /run` response captured from `index/run.a4c0c47e-c87f-4745-8d33-8623532cbfa8.json`
+(formatted and truncated for readability):
+
+```json
+{
+  "run_id": "a4c0c47e-c87f-4745-8d33-8623532cbfa8",
+  "plan": [
+    "Clarify the objective and constraints",
+    "Collect relevant evidence (RAG + tools)",
+    "Synthesize insights and recommendations"
+  ],
+  "final_output": "Analysis for: how can I become a software engineer?",
+  "critique": {
+    "should_retry": false,
+    "feedback": "Looks good."
+  },
+  "sources": [
+    {
+      "type": "rag",
+      "origin": "careers_software_and_ai.md",
+      "snippet": "# Careers: software engineering and moving into AI engineering ..."
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: how can I become a software engineer?"
+    }
+  ],
+  "trace": [
+    {"node": "planner", "latency_ms": 0},
+    {"node": "researcher", "latency_ms": 10},
+    {"node": "executor", "latency_ms": 0},
+    {"node": "critic", "latency_ms": 0}
+  ],
+  "latency_ms": 17
+}
+```
 
 ## ✅ Execution Guarantees (v1)
 
@@ -211,10 +280,10 @@ flowchart TD
 
 #### Operational details (v1)
 
-| Type | Storage | Purpose |
-| --- | --- | --- |
-| Short-term | Redis | run snapshots + session grouping (best-effort) |
-| Long-term | FAISS | semantic recall over local docs |
+| Type       | Storage | Purpose                                        |
+| ---------- | ------- | ---------------------------------------------- |
+| Short-term | Redis   | run snapshots + session grouping (best-effort) |
+| Long-term  | FAISS   | semantic recall over local docs                |
 
 - Store after execution (run snapshot file always; Redis best-effort)
 - Retrieve during Researcher phase (`top_k = 3`)
@@ -259,15 +328,15 @@ flowchart TD
 
 ## ⚙️ Tech Stack
 
-| Layer         | Technology                     |
-| ------------- | ------------------------------ |
-| Backend API   | FastAPI (Python)               |
-| Orchestration | LangGraph                      |
+| Layer         | Technology                           |
+| ------------- | ------------------------------------ |
+| Backend API   | FastAPI (Python)                     |
+| Orchestration | LangGraph                            |
 | LLMs          | Google Gemini (via `GOOGLE_API_KEY`) |
-| Embeddings    | OpenAI / Sentence Transformers |
-| Vector DB     | FAISS / Pinecone               |
-| Memory        | Redis                          |
-| Tools         | APIs (Search, DB, Web3, etc.)  |
+| Embeddings    | OpenAI / Sentence Transformers       |
+| Vector DB     | FAISS / Pinecone                     |
+| Memory        | Redis                                |
+| Tools         | APIs (Search, DB, Web3, etc.)        |
 
 ---
 
@@ -591,17 +660,20 @@ Optimize latency
 
 ---
 
+## 🔧 Tooling (Real Integrations)
 
-# 💣 Honest Take
-
-This README now:
-- Looks like **real startup-level architecture**
-- Signals **system design maturity**
-- Differentiates you from 95% of candidates
+- **Google Gemini** (`GOOGLE_API_KEY`) for planning / synthesis / critique
+- **Tavily Search** (`TAVILY_API_KEY`) for real-time web intelligence (feature-flagged; falls back to mock)
+- **Mermaid diagrams**: the API returns `topic_diagram_mermaid` to visualize a user-topic path per run
 
 ---
 
-If you want to go even harder:
-👉 I can add **“demo walkthrough script (what to say in interviews)”**
-👉 Or **convert this into a killer portfolio case study (with storytelling)**
+## ⚠️ Current Limitations (v1)
+
+- **Single-turn** by design (no true multi-turn conversation memory yet)
+- **RAG corpus is local** (`/data`) and small by default; not a large-scale indexing pipeline
+- **No streaming** response yet (request returns only after the run completes)
+- **Cost tracking is estimated** (token-based approximation, not billing-grade)
+- **Redis snapshot is best-effort** (the system still returns successfully if Redis is down)
+
 ```
