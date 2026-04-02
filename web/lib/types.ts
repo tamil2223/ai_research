@@ -15,7 +15,12 @@ export type RunResponse = {
   }>;
   trace: Array<{ node: string; latency_ms: number; detail?: Record<string, unknown> }>;
   tool_calls: Array<{ tool: string; query: string }>;
-  cost: { tokens: number; estimated_usd: number };
+  cost: {
+    tokens: number;
+    estimated_usd: number;
+    prompt_tokens?: number;
+    completion_tokens?: number;
+  };
   latency_ms: number;
   /** Mermaid: visual path for the user's topic (goals, research, execution) */
   topic_diagram_mermaid?: string;

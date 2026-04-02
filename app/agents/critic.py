@@ -6,6 +6,7 @@ from app.core.config import load_settings
 from app.core.state import AgentState, Critique, TraceEvent
 from app.llm.gemini import generate_text
 from app.utils.json_llm import parse_json_from_llm
+from app.utils.llm_usage import append_usage
 from app.utils.run_log import node_begin, node_end
 from app.utils.time import timed
 
@@ -47,6 +48,7 @@ async def critic_node(state: AgentState) -> AgentState:
                 if isinstance(parsed, dict) and "should_retry" in parsed:
                     reasons = list(parsed.get("reasons") or [])
                     should_retry = bool(parsed.get("should_retry"))
+                    append_usage(state, resp.usage)
                     _LOG.info(
                         "critic: Gemini OK run_id=%s should_retry=%s",
                         state.get("run_id"),

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from app.llm.gemini import generate_text
 
@@ -58,10 +58,10 @@ async def generate_topic_diagram_mermaid(
     query: str,
     plan: List[str],
     final_output: Dict[str, Any],
-) -> str:
+) -> Tuple[str, Dict[str, Any]]:
     """
     Mermaid flowchart about the *user's question* (how to plan, research, act),
-    not about LangGraph agents.
+    not about LangGraph agents. Returns (mermaid_source, gemini_usage_dict).
     """
     plan_text = "\n".join(f"- {p}" for p in plan[:12]) if plan else "(no plan list)"
     summary = ""
@@ -73,7 +73,7 @@ async def generate_topic_diagram_mermaid(
 
     if not api_key.strip():
         _LOG.info("topic_diagram: no API key, using plan fallback")
-        return fallback_mermaid(query, plan)
+        return fallback_mermaid(query, plan), {}
 
     prompt = (
         f"User question:\n{query}\n\n"
@@ -103,8 +103,8 @@ async def generate_topic_diagram_mermaid(
         normalized = _normalize_mermaid(res.text)
         if not normalized or len(normalized) < 15:
             _LOG.warning("topic_diagram: Gemini returned empty/short, using fallback")
-            return fallback_mermaid(query, plan)
-        return normalized
+            return fallback_mermaid(query, plan), dict(res.usage or {})
+        return normalized, dict(res.usage or {})
     except Exception as e:
         _LOG.warning("topic_diagram: Gemini failed, using fallback err=%s", e)
-        return fallback_mermaid(query, plan)
+        return fallback_mermaid(query, plan), {}

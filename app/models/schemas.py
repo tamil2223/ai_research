@@ -30,8 +30,12 @@ class ToolCallModel(BaseModel):
 
 
 class CostModel(BaseModel):
+    """Aggregated Gemini usage for the run (all agents + topic diagram)."""
+
     tokens: int = 0
     estimated_usd: float = 0.0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 class CritiqueModel(BaseModel):

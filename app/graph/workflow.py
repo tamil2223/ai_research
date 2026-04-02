@@ -17,6 +17,7 @@ from pathlib import Path
 from app.memory.file_store import write_run_snapshot_file
 from app.memory.redis_store import write_run_snapshot
 from app.utils.ids import new_run_id
+from app.utils.llm_usage import aggregate_cost, append_usage
 from app.utils.run_log import graph_decision
 from app.utils.time import timed
 from app.utils.topic_diagram import generate_topic_diagram_mermaid
@@ -98,22 +99,24 @@ async def run_workflow(query: str, session_id: Optional[str], debug: bool) -> Di
             [t.get("node") for t in (final_state.get("trace") or [])],
         )
 
-        # v1: placeholders; will be computed from provider later
-        final_state.setdefault("cost", {"tokens": 0, "estimated_usd": 0.0})
-
         # In debug=false, we still return trace by spec; only detail fields should be suppressed by nodes.
         _ = debug
 
         snapshot = dict(final_state)
         rid = str(final_state.get("run_id"))
 
-        snapshot["topic_diagram_mermaid"] = await generate_topic_diagram_mermaid(
+        topic_mermaid, topic_usage = await generate_topic_diagram_mermaid(
             api_key=settings.google_api_key,
             model=settings.gemini_model,
             query=str(snapshot.get("user_query", "")),
             plan=list(snapshot.get("plan") or []),
             final_output=dict(snapshot.get("final_output") or {}),
         )
+        snapshot["topic_diagram_mermaid"] = topic_mermaid
+        append_usage(snapshot, topic_usage)
+
+        snapshot["cost"] = aggregate_cost(list(snapshot.get("llm_usage_events") or []))
+        snapshot.pop("llm_usage_events", None)
 
         # Local file first so a slow/broken Redis never blocks returning /run to the client.
         snap_path = write_run_snapshot_file(

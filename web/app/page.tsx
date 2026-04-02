@@ -127,9 +127,16 @@ export default function HomePage() {
                 <dd>{result.latency_ms}</dd>
               </div>
               <div>
-                <dt className="text-[var(--muted)]">cost</dt>
+                <dt className="text-[var(--muted)]">cost (Gemini)</dt>
                 <dd>
-                  {result.cost.tokens} tokens · ${result.cost.estimated_usd.toFixed(4)}
+                  {result.cost.tokens} tokens total
+                  {typeof result.cost.prompt_tokens === "number" && result.cost.prompt_tokens > 0 ? (
+                    <span className="text-[var(--muted)]">
+                      {" "}
+                      · in {result.cost.prompt_tokens} · out {result.cost.completion_tokens ?? 0}
+                    </span>
+                  ) : null}
+                  {" · "}${result.cost.estimated_usd.toFixed(4)} est.
                 </dd>
               </div>
             </dl>

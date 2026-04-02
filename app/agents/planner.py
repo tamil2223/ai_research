@@ -5,6 +5,7 @@ import logging
 from app.core.state import AgentState, TraceEvent
 from app.core.config import load_settings
 from app.llm.gemini import generate_text
+from app.utils.llm_usage import append_usage
 from app.utils.run_log import node_begin, node_end
 from app.utils.time import timed
 
@@ -36,6 +37,7 @@ async def planner_node(state: AgentState) -> AgentState:
                 )
                 lines = [ln.strip("-• \t") for ln in resp.text.splitlines() if ln.strip()]
                 plan = [ln for ln in lines if ln][:5] or plan
+                append_usage(state, resp.usage)
                 _LOG.info("planner: Gemini OK plan_steps=%s run_id=%s", len(plan), state.get("run_id"))
             except Exception as e:
                 _LOG.warning("planner: Gemini failed, using defaults run_id=%s err=%s", state.get("run_id"), e)

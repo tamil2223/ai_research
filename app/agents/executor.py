@@ -7,6 +7,7 @@ from app.core.config import load_settings
 from app.core.state import AgentState, TraceEvent
 from app.llm.gemini import generate_text
 from app.utils.json_llm import parse_json_from_llm
+from app.utils.llm_usage import append_usage
 from app.utils.run_log import node_begin, node_end
 from app.utils.time import timed
 
@@ -77,6 +78,7 @@ async def executor_node(state: AgentState) -> AgentState:
                 if isinstance(parsed, dict) and "insights" in parsed:
                     parsed["evidence_snippets"] = snippets
                     final_output = parsed
+                append_usage(state, resp.usage)
                 _LOG.info("executor: Gemini OK run_id=%s", state.get("run_id"))
             except Exception as e:
                 _LOG.warning("executor: Gemini/parse failed, using defaults run_id=%s err=%s", state.get("run_id"), e)
