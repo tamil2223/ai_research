@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List
 
 from app.core.config import load_settings
 from app.core.state import AgentState, TraceEvent
 from app.llm.gemini import generate_text
+from app.utils.json_llm import parse_json_from_llm
+from app.utils.llm_usage import append_usage
+from app.utils.run_log import node_begin, node_end
 from app.utils.time import timed
+
+_LOG = logging.getLogger("capstone.agents")
 
 
 def _extract_snippets(research_data: List[Dict[str, Any]]) -> List[str]:
@@ -32,6 +38,11 @@ async def executor_node(state: AgentState) -> AgentState:
         snippets = _extract_snippets(state.get("research_data", []) or [])
 
         settings = load_settings()
+        node_begin(
+            "executor",
+            state,
+            detail=f"snippets={len(snippets)} gemini={bool(settings.google_api_key and query)}",
+        )
 
         final_output: Dict[str, Any] = {
             "summary": f"Analysis for: {query}",
@@ -44,6 +55,7 @@ async def executor_node(state: AgentState) -> AgentState:
 
         if settings.google_api_key and query:
             try:
+                _LOG.info("executor: calling Gemini run_id=%s", state.get("run_id"))
                 prompt = (
                     "Using the evidence snippets below, produce a JSON object with keys:\n"
                     "- summary: string\n"
@@ -55,20 +67,25 @@ async def executor_node(state: AgentState) -> AgentState:
                 resp = await generate_text(
                     api_key=settings.google_api_key,
                     model=settings.gemini_model,
-                    system="You generate structured JSON only. No markdown.",
+                    system=(
+                        "Return ONLY a single JSON object with keys: "
+                        "summary (string), insights (array of strings), recommendations (array of strings). "
+                        "No markdown, no code fences, no other text."
+                    ),
                     prompt=prompt,
                 )
-                import json
-
-                parsed = json.loads(resp.text)
+                parsed = parse_json_from_llm(resp.text)
                 if isinstance(parsed, dict) and "insights" in parsed:
                     parsed["evidence_snippets"] = snippets
                     final_output = parsed
-            except Exception:
-                pass
+                append_usage(state, resp.usage)
+                _LOG.info("executor: Gemini OK run_id=%s", state.get("run_id"))
+            except Exception as e:
+                _LOG.warning("executor: Gemini/parse failed, using defaults run_id=%s err=%s", state.get("run_id"), e)
 
         trace_event: TraceEvent = {"node": "executor", "latency_ms": elapsed_ms()}
         state["final_output"] = final_output
         state.setdefault("trace", []).append(trace_event)
+        node_end("executor", state, trace_event["latency_ms"], detail="final_output ready")
         return state
 

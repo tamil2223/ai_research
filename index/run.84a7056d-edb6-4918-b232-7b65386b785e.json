@@ -1,0 +1,149 @@
+{
+  "run_id": "84a7056d-edb6-4918-b232-7b65386b785e",
+  "session_id": "57c1108d-2ba5-4c49-91f8-f3daf4c41537",
+  "user_query": "plan my day, im a software engineer with 10year experience workin on startup ?",
+  "plan": [
+    "*   Code review & respond to priority messages.",
+    "*   Focus on the most critical development task.",
+    "*   Lunch and quick personal break.",
+    "*   Team sync/standup meeting & follow-up tasks.",
+    "*   Plan for tomorrow & review today's progress."
+  ],
+  "research_data": [
+    {
+      "type": "tool",
+      "name": "web_search",
+      "result": {
+        "provider": "mock",
+        "query": "plan my day, im a software engineer with 10year experience workin on startup ?",
+        "results": [
+          {
+            "title": "Mock result: AI trends overview",
+            "url": "https://example.com/ai-trends",
+            "snippet": "Mock snippet for query: plan my day, im a software engineer with 10year experience workin on startup ?"
+          }
+        ]
+      }
+    }
+  ],
+  "final_output": {
+    "summary": "The user is a software engineer with 10 years of experience working at a startup and needs help planning their day.",
+    "insights": [
+      "User is experienced (10 years) in software engineering.",
+      "User works at a startup, implying a potentially fast-paced and dynamic work environment.",
+      "User is seeking assistance with daily planning."
+    ],
+    "recommendations": [
+      "Prioritize tasks based on urgency and impact on the startup's goals.",
+      "Allocate time for focused work, meetings, and potential interruptions.",
+      "Schedule short breaks throughout the day to maintain focus and prevent burnout.",
+      "Consider using time management techniques like the Pomodoro Technique or time blocking.",
+      "Review and adjust the plan regularly based on progress and new priorities."
+    ],
+    "evidence_snippets": [
+      "Mock snippet for query: plan my day, im a software engineer with 10year experience workin on startup ?"
+    ]
+  },
+  "critique": {
+    "verdict": "pass",
+    "reasons": [
+      "The output provides a reasonable summary of the user's situation.",
+      "It extracts key insights from the user's request.",
+      "It offers relevant and actionable recommendations for daily planning, tailored to the user's context (experienced software engineer at a startup).",
+      "It includes evidence snippets, indicating the reasoning process is grounded in the provided information."
+    ],
+    "should_retry": false
+  },
+  "sources": [
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: plan my day, im a software engineer with 10year experience workin on startup ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: plan my day, im a software engineer with 10year experience workin on startup ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    },
+    {
+      "type": "tool",
+      "origin": "web_search",
+      "snippet": "Mock snippet for query: plan my day, im a software engineer with 10year experience workin on startup ?",
+      "metadata": {
+        "url": "https://example.com/ai-trends",
+        "title": "Mock result: AI trends overview"
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "web_search",
+      "query": "plan my day, im a software engineer with 10year experience workin on startup ?"
+    },
+    {
+      "tool": "web_search",
+      "query": "plan my day, im a software engineer with 10year experience workin on startup ?"
+    },
+    {
+      "tool": "web_search",
+      "query": "plan my day, im a software engineer with 10year experience workin on startup ?"
+    }
+  ],
+  "trace": [
+    {
+      "node": "planner",
+      "latency_ms": 1713
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 1
+    },
+    {
+      "node": "executor",
+      "latency_ms": 1928
+    },
+    {
+      "node": "critic",
+      "latency_ms": 2051
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 6
+    },
+    {
+      "node": "executor",
+      "latency_ms": 1912
+    },
+    {
+      "node": "critic",
+      "latency_ms": 1971
+    },
+    {
+      "node": "researcher",
+      "latency_ms": 0
+    },
+    {
+      "node": "executor",
+      "latency_ms": 2056
+    },
+    {
+      "node": "critic",
+      "latency_ms": 1618
+    }
+  ],
+  "retry_count": 2,
+  "max_retries": 2,
+  "latency_ms": 13295,
+  "cost": {
+    "tokens": 0,
+    "estimated_usd": 0.0
+  }
+}

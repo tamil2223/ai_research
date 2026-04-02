@@ -1,2 +1,11 @@
 .env
 .venv/
+web/node_modules/
+web/.next/
+web/.env.local
+web/package-lock.json
+
+data/
+index/*
+
+tests/

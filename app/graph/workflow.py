@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import Any, Dict, Optional
 
 from langgraph.graph import END, StateGraph
@@ -15,18 +17,31 @@ from pathlib import Path
 from app.memory.file_store import write_run_snapshot_file
 from app.memory.redis_store import write_run_snapshot
 from app.utils.ids import new_run_id
+from app.utils.llm_usage import aggregate_cost, append_usage
+from app.utils.run_log import graph_decision
 from app.utils.time import timed
+from app.utils.topic_diagram import generate_topic_diagram_mermaid
+
+_LOG = logging.getLogger("capstone.workflow")
 
 
 def _should_retry(state: AgentState) -> str:
+    # LangGraph does not merge state mutations from conditional edge callbacks—only
+    # node return values update state. Retry accounting is done in critic_node.
     critique = state.get("critique") or {}
-    retry_count = int(state.get("retry_count") or 0)
-    max_retries = int(state.get("max_retries") or 2)
     should_retry = bool(critique.get("should_retry"))
+    max_retries = int(state.get("max_retries") or 2)
 
-    if should_retry and retry_count < max_retries:
-        state["retry_count"] = retry_count + 1
+    if should_retry:
+        graph_decision(
+            f"critic -> RETRY researcher (retry_count={state.get('retry_count', 0)}/{max_retries})",
+            state,
+        )
         return "retry"
+    graph_decision(
+        f"critic -> END (verdict={critique.get('verdict')!r} should_retry={should_retry})",
+        state,
+    )
     return "done"
 
 
@@ -68,34 +83,68 @@ async def run_workflow(query: str, session_id: Optional[str], debug: bool) -> Di
             "sources": [],
         }
 
+        _LOG.info(
+            "LangGraph.ainvoke START run_id=%s query_len=%s session_id=%s debug=%s",
+            state["run_id"],
+            len(query),
+            session_id or "-",
+            debug,
+        )
         final_state = await _APP.ainvoke(state)  # type: ignore[attr-defined]
         final_state["latency_ms"] = elapsed_ms()
-
-        # v1: placeholders; will be computed from provider later
-        final_state.setdefault("cost", {"tokens": 0, "estimated_usd": 0.0})
+        _LOG.info(
+            "LangGraph.ainvoke END run_id=%s workflow_elapsed_ms=%s trace_nodes=%s",
+            final_state.get("run_id"),
+            final_state["latency_ms"],
+            [t.get("node") for t in (final_state.get("trace") or [])],
+        )
 
         # In debug=false, we still return trace by spec; only detail fields should be suppressed by nodes.
         _ = debug
 
-        # Persist short-term snapshot to Redis (best-effort)
-        try:
-            write_run_snapshot(
-                redis_url=settings.redis_url,
-                run_id=str(final_state.get("run_id")),
-                snapshot=dict(final_state),
-                ttl_seconds=3600,
-                session_id=session_id,
-            )
-        except Exception:
-            # v1: don't fail request due to Redis issues
-            pass
+        snapshot = dict(final_state)
+        rid = str(final_state.get("run_id"))
 
-        # Always persist a local snapshot file for the demo
-        write_run_snapshot_file(
-            capstone_root=capstone_root,
-            run_id=str(final_state.get("run_id")),
-            snapshot=dict(final_state),
+        topic_mermaid, topic_usage = await generate_topic_diagram_mermaid(
+            api_key=settings.google_api_key,
+            model=settings.gemini_model,
+            query=str(snapshot.get("user_query", "")),
+            plan=list(snapshot.get("plan") or []),
+            final_output=dict(snapshot.get("final_output") or {}),
         )
+        snapshot["topic_diagram_mermaid"] = topic_mermaid
+        append_usage(snapshot, topic_usage)
 
-        return dict(final_state)
+        snapshot["cost"] = aggregate_cost(list(snapshot.get("llm_usage_events") or []))
+        snapshot.pop("llm_usage_events", None)
+
+        # Local file first so a slow/broken Redis never blocks returning /run to the client.
+        snap_path = write_run_snapshot_file(
+            capstone_root=capstone_root,
+            run_id=rid,
+            snapshot=snapshot,
+        )
+        _LOG.info("File snapshot %s", snap_path)
+
+        async def _redis_best_effort() -> None:
+            def _write() -> None:
+                write_run_snapshot(
+                    redis_url=settings.redis_url,
+                    run_id=rid,
+                    snapshot=snapshot,
+                    ttl_seconds=3600,
+                    session_id=session_id,
+                )
+
+            await asyncio.wait_for(asyncio.to_thread(_write), timeout=5.0)
+
+        try:
+            await _redis_best_effort()
+            _LOG.info("Redis snapshot written run_id=%s", rid)
+        except asyncio.TimeoutError:
+            _LOG.warning("Redis snapshot timed out (5s) run_id=%s — response still returned", rid)
+        except Exception as e:
+            _LOG.warning("Redis snapshot skipped run_id=%s err=%s", rid, e)
+
+        return snapshot
 

@@ -53,3 +53,6 @@ class AgentState(TypedDict, total=False):
     retry_count: int
     max_retries: int
 
+    # Raw Gemini usage_metadata dicts; aggregated into cost before API response.
+    llm_usage_events: List[Dict[str, Any]]
+

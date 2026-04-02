@@ -20,6 +20,9 @@ def _iter_text_files(data_dir: Path) -> List[Path]:
     files: List[Path] = []
     for p in data_dir.rglob("*"):
         if p.is_file() and p.suffix.lower() in exts:
+            # Skip generic READMEs so retrieval focuses on topical corpus.
+            if p.name.lower() == "readme.md":
+                continue
             files.append(p)
     return sorted(files)
 

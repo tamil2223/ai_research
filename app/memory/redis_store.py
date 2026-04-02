@@ -12,7 +12,13 @@ except Exception:  # pragma: no cover
 def _redis_client(redis_url: str) -> redis.Redis:
     if redis is None:
         raise RuntimeError("redis package is not installed")
-    return redis.Redis.from_url(redis_url, decode_responses=True)
+    # Avoid hanging the ASGI event loop when Redis is down or misaddressed.
+    return redis.Redis.from_url(
+        redis_url,
+        decode_responses=True,
+        socket_connect_timeout=2.0,
+        socket_timeout=2.0,
+    )
 
 
 def write_run_snapshot(
@@ -25,7 +31,7 @@ def write_run_snapshot(
 ) -> None:
     r = _redis_client(redis_url)
     key = f"run:{run_id}"
-    r.set(key, json.dumps(snapshot, ensure_ascii=False), ex=ttl_seconds)
+    r.set(key, json.dumps(snapshot, ensure_ascii=False, default=str), ex=ttl_seconds)
 
     if session_id:
         r.set(f"session:{session_id}:latest", key, ex=ttl_seconds)
