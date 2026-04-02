@@ -6,5 +6,6 @@ web/.env.local
 web/package-lock.json
 
 data/
-index/
+index/*
+
 tests/
