@@ -43,7 +43,7 @@ flowchart TD
     G --> H[Final Response]
 
     %% RAG Layer
-    E --> I[Vector DB (FAISS / Pinecone)]
+    E --> I[Vector DB - FAISS / Pinecone]
     E --> J[Embeddings Model]
 
     %% Tools
@@ -51,8 +51,8 @@ flowchart TD
     E --> L[External APIs / DB]
 
     %% Memory
-    C --> M[Short-Term Memory (Redis)]
-    C --> N[Long-Term Memory (Vector DB)]
+    C --> M[Short-Term Memory - Redis]
+    C --> N[Long-Term Memory - Vector DB]
 
     H --> A
 ```
@@ -181,12 +181,12 @@ flowchart TD
     B --> C[Top-K Documents]
 
     Q --> D[Tool Calls]
-    D --> E[Web / APIs]
+    D --> E[Web APIs]
 
     C --> F[Context Builder]
     E --> F
 
-    F --> G[LLM (Reasoning)]
+    F --> G[LLM Reasoning]
     G --> H[Output]
 ```
 
@@ -198,8 +198,8 @@ flowchart TD
 flowchart TD
     A[User Query] --> B[Session Context]
 
-    B --> C[Short-Term Memory (Redis)]
-    B --> D[Long-Term Memory (Vector DB)]
+    B --> C[Short-Term Memory - Redis]
+    B --> D[Long-Term Memory - Vector DB]
 
     D --> E[Semantic Retrieval]
     E --> F[Relevant Past Knowledge]
@@ -386,7 +386,7 @@ flowchart TD
     D2 --> F[External APIs]
 
     C --> G[Redis Cache]
-    C --> H[Message Queue (Kafka)]
+    C --> H[Message Queue - Kafka]
 
     H --> D2
     H --> D3
