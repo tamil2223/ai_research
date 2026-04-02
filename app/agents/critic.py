@@ -22,7 +22,14 @@ async def critic_node(state: AgentState) -> AgentState:
         reasons = []
         should_retry = False
 
-        if not isinstance(final_output, dict) or not final_output.get("insights"):
+        # Heuristic retry guard when Gemini is disabled/unavailable:
+        # only retry if we don't have the minimal structured output that the UI expects.
+        if (
+            not isinstance(final_output, dict)
+            or not isinstance(final_output.get("insights"), list)
+            or not isinstance(final_output.get("recommendations"), list)
+            or not isinstance(final_output.get("summary"), str)
+        ):
             reasons.append("Output missing key structured fields.")
             should_retry = True
 
@@ -54,7 +61,7 @@ async def critic_node(state: AgentState) -> AgentState:
                         state.get("run_id"),
                         should_retry,
                     )
-            except Exception as e:
+            except (RuntimeError, ValueError, TypeError) as e:
                 _LOG.warning("critic: Gemini failed, heuristic only run_id=%s err=%s", state.get("run_id"), e)
 
         critique: Critique = {

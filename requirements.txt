@@ -6,4 +6,5 @@ langgraph
 redis
 faiss-cpu
 google-genai
+httpx
 
