@@ -135,8 +135,12 @@ docker compose up -d
 ### 3) Run API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 5
 ```
+
+**Ctrl+C seems stuck?** Uvicorn shuts down *gracefully*: it waits for open connections and in-flight work. While **`POST /run`** is inside Gemini (`asyncio.to_thread`), that work can block a thread until **`GEMINI_REQUEST_TIMEOUT_SEC`** (default 120s), so shutdown may not finish until the request ends unless you cap graceful shutdown with `--timeout-graceful-shutdown` (seconds above). If it still hangs, press **Ctrl+C a second time** or in another terminal: `kill -9 $(lsof -t -i:8000)` (replace port if needed).
+
+**Request tracing:** set `LOG_LEVEL=INFO` (default) or `LOG_LEVEL=DEBUG` for more detail, then start Uvicorn (see `.env.example`). You should see `/run` request preview, each LangGraph node (planner → researcher → executor → critic), Gemini start/end, Redis/file snapshot, and critic retry decisions—all prefixed with loggers `capstone.api`, `capstone.workflow`, `capstone.agents`, `capstone.llm`.
 
 ### 4) Test
 
@@ -145,6 +149,23 @@ curl -s localhost:8000/health | jq
 curl -s -X POST localhost:8000/run -H 'content-type: application/json' \
   -d '{"query":"Analyze AI startup opportunities","debug":true}' | jq
 ```
+
+### 5) Web UI (Next.js)
+
+The UI lives in `web/`. It calls `POST /run` on the API (CORS is enabled for `localhost:3000` by default via `CORS_ORIGINS`).
+
+This repo uses **[Bun](https://bun.sh)** for the frontend (faster installs and script startup than npm for most workflows). Install Bun once, then:
+
+```bash
+cd web
+cp .env.local.example .env.local
+bun install
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Keep the API running on port **8000**, or set `NEXT_PUBLIC_API_URL` in `web/.env.local` to match your backend.
+
+If you prefer npm, `npm install` and `npm run dev` still work; the lockfile for Bun is `bun.lock`.
 
 ---
 
@@ -281,7 +302,7 @@ REDIS_URL=redis://localhost:6379
 Run:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 5
 ```
 
 ---
